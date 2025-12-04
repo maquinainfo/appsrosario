@@ -1,0 +1,779 @@
+!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Santo Rosário da Batalha Espiritual</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- Palette Variables --- */
+        :root {
+            --vatican-red: #700F14;
+            --sacred-gold: #C5A059;
+            --deep-sepia: #2C1810;
+            --marble-white: #F4F0EC;
+            --shadow-dark: rgba(0, 0, 0, 0.7);
+        }
+
+        /* --- Global Resets & Typography --- */
+        html {
+            height: 100%;
+            height: 100dvh; 
+            overflow: hidden;
+        }
+
+        body {
+            height: 100%;
+            height: 100dvh;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            position: fixed;
+            inset: 0;
+            background-color: var(--deep-sepia);
+            color: var(--marble-white);
+            font-family: 'Cormorant Garamond', serif;
+            background-image: radial-gradient(circle at center, #3e2219 0%, #1a0e0a 100%);
+        }
+
+        h1, h2, h3, h4, .cinzel-font {
+            font-family: 'Cinzel', serif;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* --- Custom Scrollbar --- */
+        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--sacred-gold); border-radius: 3px; }
+
+        /* SCROLL CONTAINER FIX */
+        .scroll-container {
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- Gold Accents & Text --- */
+        .gold-text-gradient {
+            background: linear-gradient(to bottom, #fff0c4, #C5A059);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* --- BATTLE SELECTION BUTTONS --- */
+        .battle-btn {
+            background: linear-gradient(to right, #2C1810, #3e2219);
+            border: 1px solid #5c3a21;
+            border-left: 4px solid #8b5a2b;
+            transition: all 0.2s ease;
+        }
+        .battle-btn:active { transform: translateX(2px); background: #22120d; }
+
+        /* --- NETFLIX STYLE INSTRUCTION ROOM --- */
+        .netflix-hero {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(20,20,20,1) 100%), url('https://images.unsplash.com/photo-1548625361-9872e259926d?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        .netflix-card {
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .netflix-card:active {
+            transform: scale(0.95);
+        }
+
+        /* --- 3D CANVAS --- */
+        #scene-container {
+            width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0;
+            z-index: 10;
+            cursor: grab;
+            background: transparent;
+        }
+        #scene-container:active { cursor: grabbing; }
+
+        /* Animations */
+        @keyframes shine { 100% { transform: translateX(100%); } }
+        .animate-shine { animation: shine 1.5s infinite; }
+        
+        /* Reading View Styles */
+        .article-content p { margin-bottom: 1rem; line-height: 1.6; }
+        .article-content h3 { color: #C5A059; margin-top: 2rem; margin-bottom: 0.5rem; border-bottom: 1px solid #3d271e; padding-bottom: 0.2rem; font-family: 'Cinzel', serif; font-weight: bold; font-size: 1.2rem; }
+        .article-content h4 { color: #e0d0c0; margin-top: 1.5rem; margin-bottom: 0.4rem; font-weight: bold; font-size: 1.1rem; }
+        .article-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #a89078; }
+        .article-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; color: #a89078; }
+        .article-content li { margin-bottom: 0.5rem; }
+        .article-content strong { color: #f0e6d2; }
+        .article-content em { color: #C5A059; font-style: italic; }
+
+        /* Navigation Arrows */
+        .nav-arrow {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0,0,0,0.5);
+            color: #C5A059;
+            padding: 15px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 60;
+            transition: background 0.3s, transform 0.2s;
+            border: 1px solid #C5A059;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .nav-arrow:hover { background-color: rgba(20,10,10,0.9); transform: translateY(-50%) scale(1.1); }
+        .nav-arrow:active { transform: translateY(-50%) scale(0.95); }
+        .nav-prev { left: 20px; }
+        .nav-next { right: 20px; }
+        
+        @media (max-width: 768px) {
+            .nav-arrow { 
+                bottom: 40px; 
+                top: auto; 
+                transform: none;
+                padding: 12px;
+            }
+            .nav-arrow:hover { transform: scale(1.1); }
+            .nav-arrow:active { transform: scale(0.95); }
+            .nav-prev { left: 20px; }
+            .nav-next { right: 20px; }
+        }
+        
+        .safe-area-pb {
+            padding-bottom: max(20px, env(safe-area-inset-bottom));
+        }
+    </style>
+</head>
+<body class="flex justify-center items-start h-full w-full overflow-hidden bg-[#1a0e0a]">
+
+    <!-- App Container -->
+    <div id="app" class="w-full max-w-7xl h-full h-[100dvh] relative shadow-2xl overflow-hidden bg-[#22120d] border-x border-[#3d271e] flex flex-col mx-auto">
+        
+        <!-- Header -->
+        <header id="main-header" class="shrink-0 pt-6 pb-4 px-6 text-center z-20 relative transition-all duration-300 bg-gradient-to-b from-black/80 to-transparent">
+            <div class="text-[10px] tracking-[0.3em] text-[#C5A059] uppercase mb-1 drop-shadow-md font-bold">Pax Et Bonum</div>
+            <h1 class="text-3xl font-bold text-[#f5e6c4] drop-shadow-lg font-cinzel tracking-wide">Santo Rosário</h1>
+            <p class="text-lg text-[#a89078] font-bold mt-1 drop-shadow-md font-cinzel tracking-wider">Batalha Espiritual</p>
+        </header>
+
+        <!-- CONTENT AREA -->
+        <div id="content-area" class="flex-grow relative w-full flex flex-col overflow-hidden">
+            
+            <!-- VIEW: Grand Hall -->
+            <main id="view-grand-hall" class="absolute inset-0 p-4 flex flex-col gap-6 scroll-container screen-transition max-w-md mx-auto w-full">
+                <div class="pb-40 w-full flex flex-col gap-4 mt-4">
+                    <div class="grid grid-cols-2 gap-4 shrink-0">
+                        <div onclick="window.navigateTo('instruction-room')" class="menu-card h-32 flex flex-col items-center justify-center text-center p-3 group" style="background: rgba(20, 10, 10, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-book-bible text-2xl text-[#C5A059] mb-2 drop-shadow-md group-hover:scale-110 transition-transform"></i>
+                            <h3 class="text-xs font-bold text-[#e0d0c0] leading-tight font-cinzel uppercase tracking-wide">Sala de<br>Instrução</h3>
+                        </div>
+                        <div class="menu-card h-32 flex flex-col items-center justify-center text-center p-3 group" style="background: rgba(20, 10, 10, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 8px; cursor: pointer;">
+                            <i class="fa-solid fa-church text-2xl text-[#C5A059] mb-2 drop-shadow-md group-hover:scale-110 transition-transform"></i>
+                            <h3 class="text-xs font-bold text-[#e0d0c0] leading-tight font-cinzel uppercase tracking-wide">Biblioteca<br>Católica</h3>
+                        </div>
+                    </div>
+                    <div onclick="window.navigateTo('battle-selection')" class="menu-card card-battle-featured h-56 rounded-lg flex items-center justify-center relative group shrink-0 overflow-hidden p-4" style="background: linear-gradient(145deg, rgba(62, 34, 25, 0.85), rgba(30, 15, 11, 0.95)); border: 2px solid #8b5a2b; cursor: pointer;">
+                        <div class="flex flex-row items-center w-full h-full z-10 gap-4">
+                            <div class="w-1/3 h-full relative flex items-center justify-center">
+                                 <svg class="w-full h-full drop-shadow-2xl" viewBox="0 0 100 160" preserveAspectRatio="xMidYMid meet">
+                                    <defs>
+                                        <radialGradient id="woodBead" cx="35%" cy="35%" r="65%"><stop offset="0%" stop-color="#e6cca8" /><stop offset="50%" stop-color="#c19a6b" /><stop offset="100%" stop-color="#8d6e63" /></radialGradient>
+                                        <linearGradient id="cordGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#4e342e" /><stop offset="50%" stop-color="#795548" /><stop offset="100%" stop-color="#3e2723" /></linearGradient>
+                                        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="2" dy="3" stdDeviation="1.5" flood-color="black" flood-opacity="0.8"/></filter>
+                                    </defs>
+                                    <path d="M 25,20 C 15,80 85,80 75,20" fill="none" stroke="url(#cordGrad)" stroke-width="2" filter="url(#shadow)" />
+                                    <line x1="50" y1="58" x2="50" y2="100" stroke="url(#cordGrad)" stroke-width="2" filter="url(#shadow)" />
+                                    <circle cx="23" cy="25" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="22" cy="40" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="26" cy="55" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="35" cy="65" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="50" cy="58" r="7" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="65" cy="65" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="74" cy="55" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="78" cy="40" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="77" cy="25" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="50" cy="72" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" /><circle cx="50" cy="85" r="5.5" fill="url(#woodBead)" filter="url(#shadow)" />
+                                    <g transform="translate(50, 115)"><rect x="-3" y="-18" width="6" height="36" fill="#5d4037" stroke="#3e2723" stroke-width="0.5" filter="url(#shadow)" rx="1" /><rect x="-12" y="-12" width="24" height="6" fill="#5d4037" stroke="#3e2723" stroke-width="0.5" filter="url(#shadow)" rx="1" /></g>
+                                 </svg>
+                            </div>
+                            <div class="w-2/3 text-left pl-4 border-l border-[#C5A059]/30">
+                                <h2 class="text-2xl text-[#fff] font-bold drop-shadow-lg cinzel-font leading-tight mb-1">Oração do<br>Rosário</h2>
+                                <p class="text-[10px] text-[#C5A059] uppercase tracking-widest mb-3">Rosário Completo</p>
+                                <span class="text-[10px] bg-[#C5A059]/20 text-[#C5A059] px-2 py-1 rounded border border-[#C5A059]/40">Entrar</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Other Cards -->
+                    <div class="menu-card h-24 flex flex-row items-center justify-start px-6 gap-4 group shrink-0" style="background: rgba(20, 10, 10, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 8px; cursor: pointer;">
+                        <div class="w-10 h-10 rounded-full bg-[#3e2219] shadow-inner flex items-center justify-center border border-[#8a6e2f]">
+                            <i class="fa-solid fa-book-open-reader text-[#ebd7b9]"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-sm font-bold text-[#e0d0c0] leading-tight font-cinzel uppercase">Leitura Orante</h3>
+                            <p class="text-[10px] text-gray-400">Sagradas Escrituras</p>
+                        </div>
+                    </div>
+                    <div class="text-center mt-8 opacity-80 pb-10">
+                        <p class="text-[10px] text-[#C5A059] italic mb-1">"Quem reza se salva, quem não reza se condena."</p>
+                        <p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">- Santo Afonso -</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- VIEW: INSTRUCTION ROOM (Netflix Style) -->
+            <main id="view-instruction-room" class="hidden absolute inset-0 bg-[#141414] z-40 flex flex-col screen-transition scroll-container w-full">
+                <div class="absolute top-0 left-0 w-full p-4 z-20 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent">
+                    <button onclick="window.navigateTo('grand-hall')" class="text-[#C5A059] text-xl drop-shadow-md"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+                    <div class="text-[#C5A059] font-cinzel font-bold text-lg tracking-widest drop-shadow-md">INSTRUÇÃO</div>
+                    <div class="w-10"></div>
+                </div>
+                
+                <div class="pb-40">
+                    <div class="w-full h-[65vh] shrink-0 netflix-hero relative flex flex-col justify-end p-6">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#141414] via-[#141414]/20 to-transparent"></div>
+                        <div class="relative z-10 mb-2">
+                            <span class="bg-[#700F14] text-white text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider mb-2 inline-block">Módulo 2 - Destaque</span>
+                            <h1 class="text-3xl font-cinzel text-white font-bold leading-tight mb-2 drop-shadow-lg">O Rosário como Arma</h1>
+                            <p class="text-sm text-gray-300 mb-4 max-w-[90%] line-clamp-3">Descubra a mentalidade da "Batalha Espiritual" e a eficácia histórica do Rosário.</p>
+                            <div class="flex gap-3">
+                                <button onclick="window.openInstruction('aula1-2')" class="bg-white text-black px-4 py-2 rounded font-bold text-sm flex items-center hover:bg-gray-200 transition-colors">
+                                    <i class="fa-solid fa-image mr-2"></i> Visualizar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="instruction-content" class="pt-4 px-2"></div>
+                </div>
+            </main>
+
+            <!-- VIEW: INSTRUCTION DETAIL -->
+            <main id="view-instruction-detail" class="hidden absolute inset-0 bg-[#1a0f0c] z-50 screen-transition scroll-container custom-scroll w-full">
+                <div class="sticky top-0 z-50 bg-[#150a08]/95 backdrop-blur-sm border-b border-[#3d271e] p-4 flex justify-between items-center shadow-lg">
+                    <button onclick="window.navigateTo('instruction-room')" class="text-[#C5A059] text-sm"><i class="fa-solid fa-arrow-left"></i> Voltar</button>
+                    <span class="text-[#8a6e2f] text-xs font-bold tracking-widest uppercase">Leitura</span>
+                    <div class="w-8"></div>
+                </div>
+                
+                <div class="p-6 max-w-2xl mx-auto w-full pb-32 relative">
+                    <img id="detail-img" src="" alt="Destaque" class="w-full h-48 object-cover rounded-lg mb-6 shadow-md border border-[#3d271e]">
+                    <h1 id="detail-title" class="text-2xl font-cinzel text-[#C5A059] font-bold mb-4 leading-tight"></h1>
+                    <div id="detail-content" class="article-content text-[#e0d0c0] font-serif text-lg"></div>
+                </div>
+
+                <!-- Navigation Arrows -->
+                <div class="nav-arrow nav-prev" onclick="window.prevInstruction()">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </div>
+                <div class="nav-arrow nav-next" onclick="window.nextInstruction()">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </div>
+            </main>
+
+            <!-- VIEW: Battle Selection -->
+            <main id="view-battle-selection" class="hidden absolute inset-0 bg-[#1a0f0c] z-40 flex flex-col screen-transition">
+                <div class="flex items-center justify-between p-4 border-b border-[#3d271e] shrink-0 bg-[#22120d]">
+                    <button onclick="window.navigateTo('grand-hall')" class="text-[#C5A059]"><i class="fa-solid fa-chevron-left"></i> Voltar</button>
+                    <span class="text-[#C5A059] text-sm font-bold uppercase">Arsenal Espiritual</span>
+                    <div class="w-8"></div>
+                </div>
+                
+                <div class="flex-grow scroll-container custom-scroll p-4 gap-3 flex flex-col pb-40 max-w-md mx-auto w-full">
+                    <button onclick="window.startPrayer('casamento')" class="battle-btn w-full p-4 rounded text-left flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-[#3d221a] flex items-center justify-center border border-[#8a6e2f] mr-4 shadow-inner"><i class="fa-solid fa-heart text-[#C5A059]"></i></div>
+                        <div><h3 class="text-[#f0e6d2] font-cinzel text-sm">Restauração Conjugal</h3><p class="text-[10px] text-gray-400 uppercase tracking-widest">Rosário Completo (200 Aves)</p></div>
+                    </button>
+                    <button onclick="window.startPrayer('filhos')" class="battle-btn w-full p-4 rounded text-left flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-[#3d221a] flex items-center justify-center border border-[#8a6e2f] mr-4 shadow-inner"><i class="fa-solid fa-shield-halved text-[#C5A059]"></i></div>
+                        <div><h3 class="text-[#f0e6d2] font-cinzel text-sm">Blindagem dos Filhos</h3><p class="text-[10px] text-gray-400 uppercase tracking-widest">Foco: Proteção</p></div>
+                    </button>
+                    <button onclick="window.startPrayer('financas')" class="battle-btn w-full p-4 rounded text-left flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-[#3d221a] flex items-center justify-center border border-[#8a6e2f] mr-4 shadow-inner"><i class="fa-solid fa-door-open text-[#C5A059]"></i></div>
+                        <div><h3 class="text-[#f0e6d2] font-cinzel text-sm">Providência</h3><p class="text-[10px] text-gray-400 uppercase tracking-widest">Foco: Finanças</p></div>
+                    </button>
+                    <button onclick="window.startPrayer('ansiedade')" class="battle-btn w-full p-4 rounded text-left flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-[#3d221a] flex items-center justify-center border border-[#8a6e2f] mr-4 shadow-inner"><i class="fa-solid fa-dove text-[#C5A059]"></i></div>
+                        <div><h3 class="text-[#f0e6d2] font-cinzel text-sm">Libertação da Ansiedade</h3><p class="text-[10px] text-gray-400 uppercase tracking-widest">Foco: Paz Interior</p></div>
+                    </button>
+                    <button onclick="window.startPrayer('libertacao')" class="battle-btn w-full p-4 rounded text-left flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-[#3d221a] flex items-center justify-center border border-[#8a6e2f] mr-4 shadow-inner"><i class="fa-solid fa-cross text-[#C5A059]"></i></div>
+                        <div><h3 class="text-[#f0e6d2] font-cinzel text-sm">Cura e Libertação</h3><p class="text-[10px] text-gray-400 uppercase tracking-widest">Foco: Combate</p></div>
+                    </button>
+                </div>
+            </main>
+
+            <!-- VIEW: Prayer Interface (FIXED MOBILE LAYOUT - Button Moved) -->
+            <main id="view-prayer" class="hidden fixed inset-0 z-50 flex flex-col bg-[#1a0f0c]">
+                
+                <!-- Top Bar -->
+                <div class="shrink-0 bg-[#150a08] border-b border-[#3d271e] z-30 shadow-md flex items-center justify-between px-4 h-12">
+                    <button onclick="window.exitPrayer()" class="text-[#8a6e2f] text-sm"><i class="fa-solid fa-chevron-left"></i> Voltar</button>
+                    <span id="prayer-top-title" class="text-[#C5A059] text-xs font-bold uppercase tracking-widest truncate max-w-[150px]">Título</span>
+                    <button onclick="window.resetRosary()" class="text-[#700F14] hover:text-red-400"><i class="fa-solid fa-rotate-right"></i></button>
+                </div>
+
+                <!-- Main Content Flex -->
+                <div class="flex-1 relative flex flex-col md:flex-row overflow-hidden">
+                    
+                    <!-- 3D Rosary Area (Mobile: Top 40% | Desktop: Right 50%) -->
+                    <div class="w-full md:w-1/2 h-[40vh] md:h-full relative shrink-0 border-b md:border-b-0 md:border-l border-[#3d271e] bg-[#1a0e0a] overflow-hidden order-1 md:order-2">
+                        
+                        <!-- Centered Mary Image -->
+                        <img id="rosary-center-image"
+                             src="https://i.postimg.cc/Nf2Pvf05/3460335d72f92902a928fc13a363c05c.jpg" 
+                             class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-auto h-[60%] opacity-90 z-0 rounded-full shadow-2xl border-2 border-[#5c3a21] pointer-events-none" 
+                             style="margin-top: -10px; box-shadow: 0 0 40px rgba(197, 160, 89, 0.15);"
+                             alt="Imagem Central">
+
+                        <!-- 3D Scene Layer -->
+                        <div id="scene-container" class="w-full h-full relative z-10" style="pointer-events: auto;"></div>
+                        <div class="absolute bottom-2 right-2 text-[10px] text-gray-400 pointer-events-none opacity-70 z-20"><i class="fa-solid fa-arrows-rotate"></i> Gire</div>
+                    </div>
+
+                    <!-- LEFT SIDE: Instructions (Mobile: Bottom 60% | Desktop: Left 50%) -->
+                    <!-- The key fix: Button is now at the TOP of this section (below rosary) -->
+                    <div class="flex-1 w-full md:w-1/2 relative bg-[#1a0e0a] order-2 md:order-1 flex flex-col overflow-hidden min-h-0">
+                        
+                        <!-- CONTROLS: MOVED HERE (Below Rosary) -->
+                        <div class="shrink-0 p-3 bg-[#150a08] border-b border-[#3d271e] z-30 shadow-lg">
+                             <div class="flex justify-between items-end mb-2 px-1">
+                                <span class="text-[10px] text-gray-500">Progresso Geral</span>
+                                <span id="counter-display" class="text-sm font-bold text-[#C5A059]">0/200</span>
+                            </div>
+                            <button id="prayer-action-btn" onclick="window.nextBead()" class="w-full py-3 bg-gradient-to-r from-[#700F14] to-[#500a0e] text-[#F4F0EC] font-cinzel text-base border border-[#8a6e2f] rounded shadow-md relative overflow-hidden group active:scale-95 transition-transform">
+                                <span id="prayer-action-text" class="relative z-10 flex items-center justify-center"><i class="fa-solid fa-hands-praying mr-2"></i> Avançar</span>
+                                <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity"></div>
+                            </button>
+                        </div>
+                        
+                        <!-- Scrollable Text Area (Fills remaining space below button) -->
+                        <div class="flex-1 overflow-y-auto custom-scroll p-4 text-center">
+                            <h2 id="screen-title" class="text-lg font-bold cinzel-font text-[#C5A059] mb-4 leading-tight uppercase border-b border-[#5c3a21] pb-2">Título</h2>
+                            <div id="screen-body" class="text-sm font-serif text-[#F4F0EC] leading-relaxed mb-3 pb-10">Carregando...</div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script>
+        const genericAulaText = "<h3>Conteúdo do Módulo</h3><p>Este conteúdo está sendo preparado para as próximas atualizações.</p>";
+        const aula1_def_Text = "<h3>O que é o Rosário?</h3><p>É uma oração cristocêntrica...</p>"; 
+
+        const instructionData = [
+             {
+                category: "Módulo 1: Primeiros Passos",
+                items: [
+                    { id: "rosario-def", title: "Aula 1: O que é o Rosário?", img: "https://images.unsplash.com/photo-1518176258769-f227c798150e?q=80&w=2070&auto=format&fit=crop", content: aula1_def_Text }
+                ]
+            }
+        ];
+
+        let currentInstructionList = [];
+        let currentInstructionIndex = 0;
+
+        window.navigateTo = function(screenId) {
+            const views = ['view-grand-hall', 'view-battle-selection', 'view-instruction-room', 'view-instruction-detail', 'view-prayer'];
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.add('hidden');
+            });
+            
+            const header = document.getElementById('main-header');
+            if (screenId === 'grand-hall' || screenId === 'battle-selection') {
+                if(header) header.classList.remove('hidden');
+            } else {
+                if(header) header.classList.add('hidden');
+            }
+            document.getElementById('view-' + screenId).classList.remove('hidden');
+            if(screenId === 'instruction-room') loadInstructionContent();
+        };
+
+        window.openInstruction = function(itemId) {
+            window.navigateTo('instruction-detail');
+        };
+        
+        function loadInstructionContent() {
+            const container = document.getElementById('instruction-content');
+            if(!container || container.children.length > 0) return;
+        }
+
+        const mysterySetsOrder = ['gozosos', 'luminosos', 'dolorosos', 'gloriosos'];
+        const setDisplayNames = {
+            'gozosos': 'MISTÉRIOS GOZOSOS',
+            'luminosos': 'MISTÉRIOS LUMINOSOS',
+            'dolorosos': 'MISTÉRIOS DOLOROSOS',
+            'gloriosos': 'MISTÉRIOS GLORIOSOS'
+        };
+        
+        const prayerTexts = {
+            credo: `Creio em Deus Pai Todo-poderoso, criador do céu e da terra, e em Jesus Cristo, seu único Filho, nosso Senhor; que foi concebido pelo poder do Espírito Santo; nasceu da Virgem Maria, padeceu sob Pôncio Pilatos, foi crucificado, morto e sepultado; desceu à mansão dos mortos; ressuscitou ao terceiro dia; subiu aos céus, está sentado à direita de Deus Pai todo-poderoso, donde há de vir a julgar os vivos e os mortos; creio no Espírito Santo, na Santa Igreja Católica, na comunhão dos Santos, na remissão dos pecados, na ressurreição da carne, na vida eterna. Amém.`,
+            paiNosso: `Pai nosso que estais nos céus, santificado seja o vosso nome; venha a nós o vosso reino, seja feita a vossa vontade assim na terra como no céu. O pão nosso de cada dia nos dai hoje; perdoai-nos as nossas ofensas assim como nós perdoamos a quem nos tem ofendido, e não nos deixeis cair em tentação, mas livrai-nos do mal. Amém.`,
+            aveMaria: `Ave, Maria, cheia de graça, o Senhor é convosco, bendita sois vós entre as mulheres e bendito é o fruto do vosso ventre, Jesus. Santa Maria, Mãe de Deus, rogai por nós, pecadores, agora e na hora da nossa morte. Amém.`,
+            gloria: `Glória ao Pai, ao Filho e ao Espírito Santo. Como era no princípio, agora e sempre. Amém.`,
+            jaculatoriaJesus: `Ó meu Jesus, perdoai-nos, livrai-nos do fogo do inferno. Levai as almas todas para o céu e socorrei principalmente as que mais precisarem.`,
+            jaculatoriaMaria: `Ó Maria concebida sem pecado, rogai por nós, que recorremos a Vós.`
+        };
+
+        const mysteriesData = {
+            'gozosos': [
+                { title: "1º MISTÉRIO: A ANUNCIAÇÃO DO ANJO A MARIA", verse: "Eis aqui a serva do Senhor; faça-se em mim segundo a tua palavra. (Lc 1,38)", intention: "Jesus, restaura nosso amor e dá-nos um novo começo, como Maria acolheu a Tua vontade." },
+                { title: "2º MISTÉRIO: A VISITAÇÃO DE MARIA A ISABEL", verse: "Maria levantou-se e foi apressadamente. (Lc 1,39)", intention: "Maria, leva ao nosso casamento a graça da reconciliação e da proximidade verdadeira." },
+                { title: "3º MISTÉRIO: O NASCIMENTO DE JESUS", verse: "Ela deu à luz o seu filho primogênito. (Lc 2,7)", intention: "Jesus, renasce em nosso matrimônio e devolve-nos a ternura e o amor." },
+                { title: "4º MISTÉRIO: A APRESENTAÇÃO DE JESUS NO TEMPLO", verse: "Levaram-no a Jerusalém para apresentá-lo ao Senhor. (Lc 2,22)", intention: "Jesus, consagra nosso casamento e fortalece nossos laços." },
+                { title: "5º MISTÉRIO: A PERDA E O ENCONTRO DO MENINO JESUS", verse: "Não sabíeis que devo ocupar-me das coisas de meu Pai? (Lc 2,49)", intention: "Jesus, restaura tudo o que se perdeu entre nós e conduz-nos de volta ao Teu caminho." }
+            ],
+            'luminosos': [
+                { title: "1º MISTÉRIO: O BATISMO DE JESUS NO JORDÃO", verse: "Este é o meu Filho amado. (Mt 3,17)", intention: "Jesus, purifica nosso matrimônio e renova nossa aliança." },
+                { title: "2º MISTÉRIO: AS BODAS DE CANÁ", verse: "Fazei tudo o que Ele vos disser. (Jo 2,5)", intention: "Maria, transforma nossa relação como Jesus transformou a água em vinho novo." },
+                { title: "3º MISTÉRIO: O ANÚNCIO DO REINO DE DEUS", verse: "Convertei-vos e crede no Evangelho. (Mc 1,15)", intention: "Jesus, converte nossos corações e remove tudo que destrói nossa união." },
+                { title: "4º MISTÉRIO: A TRANSFIGURAÇÃO DE JESUS", verse: "Este é o meu Filho amado; escutai-o. (Mt 17,5)", intention: "Jesus, transforma nosso casamento com Tua luz e Tua graça." },
+                { title: "5º MISTÉRIO: A INSTITUIÇÃO DA EUCARISTIA", verse: "Isto é o meu corpo, que é dado por vós. (Lc 22,19)", intention: "Jesus, une-nos novamente no amor sacrificial e fiel." }
+            ],
+            'dolorosos': [
+                { title: "1º MISTÉRIO: A AGONIA DE JESUS NO HORTO", verse: "Pai, se queres, afasta de mim este cálice. (Lc 22,42)", intention: "Jesus, cura nossas dores mais profundas e dá-nos força para continuar." },
+                { title: "2º MISTÉRIO: A FLAGELAÇÃO DE JESUS", verse: "Pilatos tomou Jesus e mandou flagelá-lo. (Jo 19,1)", intention: "Jesus, cura as feridas causadas pelas palavras e atitudes que machucaram nosso amor." },
+                { title: "3º MISTÉRIO: A COROAÇÃO DE ESPINHOS", verse: "Tecendo uma coroa de espinhos, puseram-lha sobre a cabeça. (Mt 27,29)", intention: "Jesus, liberta nosso casamento dos pensamentos que ferem e dividem." },
+                { title: "4º MISTÉRIO: O CAMINHO DO CALVÁRIO", verse: "Jesus saiu carregando a sua cruz. (Jo 19,17)", intention: "Jesus, ajuda-nos a carregar juntos nossa cruz com amor." },
+                { title: "5º MISTÉRIO: A CRUCIFIXÃO E MORTE DE JESUS", verse: "Pai, em tuas mãos entrego o meu espírito. (Lc 23,46)", intention: "Jesus, ressuscita o que morreu em nosso casamento e renova tudo em nós." }
+            ],
+            'gloriosos': [
+                { title: "1º MISTÉRIO: A RESSURREIÇÃO DE JESUS", verse: "Não está aqui; ressuscitou! (Lc 24,6)", intention: "Jesus, traz nova vida ao nosso casamento." },
+                { title: "2º MISTÉRIO: A ASCENSÃO DE JESUS AO CÉU", verse: "Foi elevado ao céu. (At 1,9)", intention: "Jesus, eleva nosso amor e guia-nos para um novo recomeço." },
+                { title: "3º MISTÉRIO: A VINDA DO ESPÍRITO SANTO", verse: "Todos ficaram cheios do Espírito Santo. (At 2,4)", intention: "Espírito Santo, renova nossa união e restaura o diálogo entre nós." },
+                { title: "4º MISTÉRIO: A ASSUNÇÃO DE MARIA", verse: "Apareceu um grande sinal no céu: uma mulher vestida de sol. (Ap 12,1)", intention: "Maria, toma nosso casamento sob tua proteção materna." },
+                { title: "5º MISTÉRIO: A COROAÇÃO DE MARIA RAINHA", verse: "Uma coroa de doze estrelas. (Ap 12,1)", intention: "Maria, Rainha da Paz, reina sobre nosso lar e devolve a harmonia ao nosso matrimônio." }
+            ]
+        };
+
+        const prayerIntro = {
+            title: "OFERECIMENTO INICIAL",
+            body: `<div class="text-sm">
+                <p class="mb-2 italic">"Maria Santíssima, Mãe de Jesus, ofereço este Santo Rosário pela restauração do meu matrimônio. Senhor Jesus, entra no nosso lar, cura nossas feridas, quebra todo orgulho, silêncio, frieza e divisão."</p>
+                <p class="mb-2 italic">"Que todo espírito de confusão e ataque espiritual seja afastado pelo Teu poder. Maria, Rainha da Paz, envolve nossa família no Teu manto, conduz nossos corações ao perdão, à fidelidade e ao amor que vem de Deus."</p>
+                <p class="font-bold">"Jesus e Maria, salvai e protegei nossa família. Amém."</p>
+            </div>`
+        };
+
+        const prayerOutro = {
+            title: "AGRADECIMENTO E SALVE RAINHA",
+            body: `<div class="text-sm">
+                <p class="mb-2 italic">"Infinitas Graças vos damos, soberana Rainha, pelos benefícios que todos os dias recebemos de vossas mãos liberais. Dignai-vos, agora e para sempre, tomarmos debaixo do vosso poderoso amparo. E para mais vos obrigar, vos saudamos com uma Salve Rainha:"</p>
+                <p class="mb-2 italic">"Salve Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, salve! A vós bradamos os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro mostrai-nos Jesus, bendito fruto do vosso ventre, ó clemente, ó piedosa, ó doce sempre Virgem Maria. Rogai por nós, Santa Mãe de Deus, para que sejamos dignos das promessas de Cristo. Amém!"</p>
+                <p class="font-bold mt-2 text-center text-[#C5A059]">Em nome do Pai, do Filho e do Espírito Santo. Amém!</p>
+            </div>`
+        };
+
+        // State
+        let currentIntention = 'casamento'; 
+        let currentStep = 0;
+        let scene, camera, renderer, rosaryGroup, beads = [], isDragging = false, previousMousePosition = { x: 0, y: 0 };
+        let animationId;
+
+        // Init 3D
+        window.init3D = function() {
+            const container = document.getElementById('scene-container');
+            if (!container) return;
+            if (container.clientWidth === 0) { setTimeout(window.init3D, 200); return; }
+            container.innerHTML = '';
+            if(renderer) { renderer.dispose(); }
+
+            scene = new THREE.Scene(); 
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000); 
+            camera.position.set(0, 0, 90); 
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); 
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); 
+            container.appendChild(renderer.domElement);
+            
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5)); 
+            const l = new THREE.DirectionalLight(0xfffaed, 0.8); 
+            l.position.set(10, 20, 30); 
+            scene.add(l);
+            const headlight = new THREE.PointLight(0xffaa55, 0.3, 100); 
+            camera.add(headlight);
+            scene.add(camera);
+
+            generateFullRosaryMesh();
+            window.addEventListener('resize', onWindowResize);
+            
+            const onDown = (x, y) => { isDragging = true; previousMousePosition = { x, y }; };
+            const onMove = (x, y) => {
+                if(isDragging && rosaryGroup) {
+                    rosaryGroup.rotation.y += (x - previousMousePosition.x) * 0.005;
+                    rosaryGroup.rotation.x += (y - previousMousePosition.y) * 0.005;
+                    previousMousePosition = { x, y };
+                }
+            };
+            const onUp = () => isDragging = false;
+
+            container.addEventListener('mousedown', e => onDown(e.offsetX, e.offsetY));
+            window.addEventListener('mouseup', onUp);
+            container.addEventListener('mousemove', e => onMove(e.offsetX, e.offsetY));
+            container.addEventListener('touchstart', e => onDown(e.touches[0].clientX, e.touches[0].clientY), {passive:false});
+            window.addEventListener('touchend', onUp);
+            container.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+            
+            if(animationId) cancelAnimationFrame(animationId);
+            animate();
+        };
+
+        function generateFullRosaryMesh() {
+            rosaryGroup = new THREE.Group(); beads = [];
+            const woodLight = new THREE.MeshPhongMaterial({ color: 0xC19A6B, shininess: 5, specular: 0x222222 });
+            const woodDark = new THREE.MeshPhongMaterial({ color: 0x5D4037, shininess: 5, specular: 0x222222 });
+            const silver = new THREE.MeshPhongMaterial({ color: 0xDDDDDD, shininess: 80, specular: 0x999999 });
+            const cord = new THREE.MeshLambertMaterial({ color: 0x3E2723 });
+            rosaryGroup.position.y = 8; 
+
+            const cg = new THREE.Group(); cg.position.set(0, -38, 0); 
+            const v = new THREE.Mesh(new THREE.BoxGeometry(1.0, 6.0, 0.5), woodDark);
+            const h = new THREE.Mesh(new THREE.BoxGeometry(3.5, 1.0, 0.5), woodDark); h.position.y = 1.0;
+            cg.add(v, h); rosaryGroup.add(cg); beads.push(v); 
+
+            const drawC = (p1, p2) => {
+                const d = p1.distanceTo(p2); if(d<0.1) return;
+                const c = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, d, 6), cord);
+                c.position.copy(p1.clone().add(p2).multiplyScalar(0.5)); 
+                c.lookAt(p2); c.rotateX(Math.PI/2);
+                rosaryGroup.add(c);
+            };
+
+            const tp = [new THREE.Vector3(0,-33,0), new THREE.Vector3(0,-31.5,0), new THREE.Vector3(0,-30,0), new THREE.Vector3(0,-28.5,0), new THREE.Vector3(0,-27,0)];
+            drawC(new THREE.Vector3(0,-35,0), tp[0]); 
+            tp.forEach((p, i) => {
+                const isPater = (i===0||i===4);
+                const s = isPater ? 0.6 : 0.35; 
+                const mat = isPater ? woodDark : woodLight;
+                const b = new THREE.Mesh(new THREE.SphereGeometry(s,16,16), mat.clone());
+                b.position.copy(p); rosaryGroup.add(b); beads.push(b);
+                if(i<4) drawC(p, tp[i+1]);
+            });
+
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,0.25,32), silver);
+            m.rotation.x = Math.PI/2; m.position.set(0,-24,0); rosaryGroup.add(m);
+            drawC(tp[4], new THREE.Vector3(0,-24.5,0));
+
+            const totalLoopBeads = 220; const lp = []; const radiusX = 22; const radiusY = 28; 
+            for(let i=0; i < totalLoopBeads; i++) {
+                const t = (1.5*Math.PI) - ((i+1)/totalLoopBeads)*2*Math.PI;
+                const wave = Math.sin(t * 10) * 0.5;
+                const x = Math.cos(t) * (radiusX + wave); 
+                const y = Math.sin(t) * (radiusY + wave); 
+                const z = Math.sin(t * 4) * 3.0; 
+                const isPater = (i % 11 === 0);
+                lp.push({pos: new THREE.Vector3(x,y,z), isPater: isPater});
+            }
+            
+            drawC(new THREE.Vector3(-1.2,-24,0), lp[0].pos);
+            drawC(new THREE.Vector3(1.2,-24,0), lp[totalLoopBeads-1].pos);
+            
+            lp.forEach((p, i) => {
+                const s = p.isPater ? 0.6 : 0.35;
+                const mat = p.isPater ? woodDark : woodLight;
+                const b = new THREE.Mesh(new THREE.SphereGeometry(s,16,16), mat.clone());
+                b.position.copy(p.pos); rosaryGroup.add(b); beads.push(b);
+                if(i < totalLoopBeads-1) drawC(p.pos, lp[i+1].pos);
+            });
+            scene.add(rosaryGroup);
+        }
+
+        function onWindowResize() {
+            if(!camera || !renderer) return;
+            const c = document.getElementById('scene-container');
+            camera.aspect = c.clientWidth / c.clientHeight; camera.updateProjectionMatrix();
+            renderer.setSize(c.clientWidth, c.clientHeight);
+        }
+        
+        function animate() { 
+            animationId = requestAnimationFrame(animate); 
+            renderer.render(scene, camera); 
+        }
+
+        window.startPrayer = function(intention) { 
+            currentIntention = intention;
+            window.navigateTo('prayer'); 
+            document.getElementById('prayer-top-title').innerText = "Restauração Conjugal";
+            resetButtonState();
+            currentStep=0; 
+            updateTextUI(); 
+            setTimeout(()=>{ window.init3D(); highlightBead(0);}, 300); 
+        };
+
+        window.exitPrayer = function() { 
+            window.navigateTo('battle-selection'); 
+            const el = document.getElementById('scene-container');
+            if(el) el.innerHTML=''; 
+            if(renderer) { renderer.dispose(); renderer = null; }
+            if(animationId) cancelAnimationFrame(animationId);
+        };
+
+        window.finishPrayer = function() {
+            window.navigateTo('grand-hall');
+            const el = document.getElementById('scene-container');
+            if(el) el.innerHTML=''; 
+            if(renderer) { renderer.dispose(); renderer = null; }
+            if(animationId) cancelAnimationFrame(animationId);
+        };
+        
+        function resetButtonState() {
+            const btn = document.getElementById('prayer-action-btn');
+            const txt = document.getElementById('prayer-action-text');
+            if(btn && txt) {
+                btn.setAttribute('onclick', 'window.nextBead()');
+                btn.classList.remove('from-[#2C1810]', 'to-[#3e2219]'); 
+                btn.classList.add('from-[#700F14]', 'to-[#500a0e]');
+                txt.innerHTML = '<i class="fa-solid fa-hands-praying mr-2"></i> Avançar';
+            }
+        }
+
+        window.nextBead = function() { 
+            if(currentStep < 250) currentStep++; 
+            updateTextUI(); 
+            highlightBead(currentStep); 
+        };
+        
+        window.resetRosary = function() { 
+            currentStep=0; 
+            resetButtonState();
+            updateTextUI(); 
+            highlightBead(0); 
+        };
+        
+        function highlightBead(idx) {
+            if(!beads.length) return;
+            
+            // Reset colors
+            beads.forEach((b, i) => { 
+                if(b.material) {
+                    b.material.emissive.setHex(0x000000); 
+                    const isLoopPater = (i >= 6 && (i-6)%11 === 0);
+                    const isTailPater = (i === 1 || i === 5);
+                    const isPater = (isTailPater || isLoopPater);
+                    b.material.color.setHex(isPater ? 0x5D4037 : 0xC19A6B);
+                }
+            });
+            
+            let beadIndex = -1;
+            let specialColor = null;
+
+            if (idx <= 5) {
+                beadIndex = idx;
+            } else {
+                const adj = idx - 6;
+                const decadeIndex = Math.floor(adj / 12);
+                const inner = adj % 12;
+                const baseBead = 6 + (decadeIndex * 11);
+                
+                if (inner === 0) beadIndex = baseBead;
+                else if (inner >= 1 && inner <= 10) beadIndex = baseBead + inner;
+                else if (inner === 11) { beadIndex = baseBead + 11; specialColor = 0xFFD700; }
+            }
+            
+            if(beadIndex >= 0 && beadIndex < beads.length && beads[beadIndex]) {
+                const b = beads[beadIndex];
+                if (!specialColor) {
+                    const isLoopPater = (beadIndex >= 6 && (beadIndex - 6) % 11 === 0);
+                    const isTailPater = (beadIndex === 1 || beadIndex === 5);
+                    const isPater = isLoopPater || isTailPater;
+                    specialColor = isPater ? 0x0000FF : 0xFF0000;
+                }
+                b.material.color.setHex(specialColor);
+                b.material.emissive.setHex(specialColor);
+                b.material.emissiveIntensity = 3.0; 
+            }
+        }
+
+        function updateTextUI() {
+            let titleText = "";
+            let bodyText = "";
+            let isEnd = false;
+            
+            // IMAGE LOGIC
+            const imgEl = document.getElementById('rosary-center-image');
+            const jesusImg = "https://i.postimg.cc/VvH0SLN2/formacao-eterna-e-a-misericordia-divina-por-nos.jpg";
+            const maryImg = "https://i.postimg.cc/Nf2Pvf05/3460335d72f92902a928fc13a363c05c.jpg";
+            let currentImg = maryImg; // Default
+
+            if (currentStep === 0) {
+                titleText = "OFERECIMENTO E CREDO";
+                bodyText = `<div class="text-sm mb-4 p-2 border-b border-[#5c3a21]/50"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-2">Oração de Oferecimento</h4><p class="mb-2 italic opacity-90">"Maria Santíssima, Mãe de Jesus, ofereço este Santo Rosário pela restauração do meu matrimônio. Senhor Jesus, entra no nosso lar, cura nossas feridas, quebra todo orgulho, silêncio, frieza e divisão."</p><p class="mb-2 italic opacity-90">"Que todo espírito de confusão e ataque espiritual seja afastado pelo Teu poder. Maria, Rainha da Paz, envolve nossa família no Teu manto, conduz nossos corações ao perdão, à fidelidade e ao amor que vem de Deus."</p><p class="font-bold text-[#C5A059]">"Jesus e Maria, salvai e protegei nossa família. Amém."</p></div><div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Credo</h4><p class="text-sm italic leading-relaxed">${prayerTexts.credo}</p></div>`;
+            } else if (currentStep === 1) {
+                currentImg = jesusImg; // Change for Pater
+                titleText = "INÍCIO";
+                bodyText = `<div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Pai Nosso</h4><p class="text-sm italic leading-relaxed">${prayerTexts.paiNosso}</p></div>`;
+            } else if (currentStep >= 2 && currentStep <= 4) {
+                titleText = "AVE MARIA";
+                bodyText = `<div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Ave Maria (${currentStep-1}/3)</h4><p class="text-sm italic leading-relaxed">${prayerTexts.aveMaria}</p></div>`;
+            } else if (currentStep === 5) {
+                titleText = "GLÓRIA";
+                bodyText = `<div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Glória</h4><p class="text-sm italic leading-relaxed">${prayerTexts.gloria}</p></div>`;
+            } else if (currentStep >= 6) {
+                const adjustedStep = currentStep - 6; 
+                const setIndex = Math.floor(adjustedStep / 60); 
+                const currentSetKey = mysterySetsOrder[setIndex];
+                
+                if (!currentSetKey) {
+                    isEnd = true;
+                    titleText = "SALVE RAINHA";
+                    bodyText = `<div class="text-sm mb-4"><p class="mb-2 italic">"Infinitas Graças vos damos, soberana Rainha, pelos benefícios que todos os dias recebemos de vossas mãos liberais. Dignai-vos, agora e para sempre, tomarmos debaixo do vosso poderoso amparo. E para mais vos obrigar, vos saudamos com uma Salve Rainha:"</p></div><div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Salve Rainha</h4><p class="text-sm italic leading-relaxed">Salve Rainha, Mãe de misericórdia, vida, doçura e esperança nossa, salve! A vós bradamos os degredados filhos de Eva. A vós suspiramos, gemendo e chorando neste vale de lágrimas. Eia, pois, advogada nossa, esses vossos olhos misericordiosos a nós volvei, e depois deste desterro mostrai-nos Jesus, bendito fruto do vosso ventre, ó clemente, ó piedosa, ó doce sempre Virgem Maria. Rogai por nós, Santa Mãe de Deus, para que sejamos dignos das promessas de Cristo. Amém.</p></div><p class="font-bold mt-4 text-center text-[#C5A059]">Em nome do Pai, do Filho e do Espírito Santo. Amém!</p>`;
+                } else {
+                    const currentMysteries = mysteriesData[currentSetKey];
+                    const currentSetName = setDisplayNames[currentSetKey];
+                    const stepInSet = adjustedStep % 60;
+                    const decadeIndex = Math.floor(stepInSet / 12);
+                    const innerStep = stepInSet % 12;
+                    const mystery = currentMysteries[decadeIndex];
+
+                    if (innerStep === 0) {
+                        currentImg = jesusImg; // Change for Pater
+                        titleText = `<div class='flex flex-col gap-1'><span class='text-[10px] text-gray-400 tracking-widest'>${currentSetName}</span><span>${mystery.title}</span></div>`;
+                        bodyText = `<p class="mb-2 text-xs italic text-[#C5A059]">"${mystery.verse}"</p><div class="mb-4 bg-[#3d221a] p-2 rounded border border-[#8a6e2f]/50 text-xs"><strong>🙏 Intenção:</strong><br>${mystery.intention}</div><div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Pai Nosso</h4><p class="text-sm italic leading-relaxed">${prayerTexts.paiNosso}</p></div>`;
+                    } else if (innerStep >= 1 && innerStep <= 10) {
+                        titleText = `<div class='flex flex-col gap-1'><span class='text-[10px] text-gray-400 tracking-widest'>${currentSetName}</span><span>${mystery.title}</span></div>`;
+                        bodyText = `<div class="bg-[#2a1a15] p-3 rounded border border-[#5c3a21]"><h4 class="text-[#C5A059] font-bold text-xs uppercase mb-1">Ave Maria (${innerStep}/10)</h4><p class="text-sm italic leading-relaxed">${prayerTexts.aveMaria}</p></div>`;
+                    } else if (innerStep === 11) {
+                        titleText = "GLÓRIA E JACULATÓRIAS";
+                        bodyText = `<div class="p-3 bg-[#700F14]/20 border-t border-[#700F14] rounded space-y-3"><div><h5 class="text-[#C5A059] text-[10px] font-bold uppercase mb-1">Glória</h5><p class="text-sm italic text-gray-300 leading-relaxed">"${prayerTexts.gloria}"</p></div><div><h5 class="text-[#C5A059] text-[10px] font-bold uppercase mb-1">Jaculatórias</h5><p class="text-sm italic text-gray-300 leading-relaxed mb-2">"${prayerTexts.jaculatoriaJesus}"</p><p class="text-sm italic text-gray-300 leading-relaxed">"${prayerTexts.jaculatoriaMaria}"</p></div></div>`;
+                    }
+                }
+            }
+            
+            // Apply Image Change
+            if(imgEl && imgEl.src !== currentImg) {
+                imgEl.src = currentImg;
+            }
+
+            document.getElementById('screen-title').innerHTML = titleText;
+            document.getElementById('screen-body').innerHTML = bodyText;
+            
+            const btn = document.getElementById('prayer-action-btn');
+            const btnText = document.getElementById('prayer-action-text');
+            
+            if (isEnd) {
+                btn.setAttribute('onclick', 'window.finishPrayer()');
+                btnText.innerHTML = '<i class="fa-solid fa-check mr-2"></i> Concluir';
+                btn.classList.remove('from-[#700F14]', 'to-[#500a0e]');
+                btn.classList.add('from-[#2C1810]', 'to-[#3e2219]'); 
+                document.getElementById('counter-display').innerText = "Fim";
+            } else {
+                if (btn.getAttribute('onclick') !== 'window.nextBead()') { resetButtonState(); }
+                document.getElementById('counter-display').innerText = `${currentStep}`;
+            }
+        }
+    </script>
+</body>
+</html>
